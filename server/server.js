@@ -1,47 +1,50 @@
-require('dotenv').config()
+require("dotenv").config();
 
-const mongoose = require('mongoose')
-const Document = require('../db/Document')
+const mongoose = require("mongoose");
+const Document = require("../db/Document");
 
 const { PORT } = process.env;
 
 
-mongoose.connect('mongodb://localhost/docs-db',{
+mongoose.connect("mongodb://localhost/docs-db", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
-  useCreateIndex: true
-})
+  useCreateIndex: true,
+});
 
-const io = require('socket.io')(PORT, {
+const io = require("socket.io")(PORT, {
   cors: {
-    origin: 'http://localhost:3000',
-    methods: ['GET','POST']
-  }
-})
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
 
-const defaultValue = ''
+const defaultValue = "";
 
-io.on('connection', socket => {
-  socket.on('get-document', async documentId => {
-    const doc = await findOrCreateDoc(documentId)
-    socket.join(documentId)
-    socket.emit('load-document', doc.data)
+io.on("connection", (socket) => {
+  socket.on("get-document", async (documentId) => {
+    const doc = await findOrCreateDoc(documentId);
+    socket.join(documentId);
+    socket.emit("load-document", doc.data);
 
-    socket.on('send-changes', delta => {
-      socket.broadcast.to(documentId).emit('receive-changes', delta)
-    })
+    socket.on("send-changes", (delta) => {
+      socket.broadcast.to(documentId).emit("receive-changes", delta);
+    });
 
-    socket.on('save-doc', async data => {
-      await Document.findByIdAndUpdate(documentId, { data })
-    })
-  })
-})
+    socket.on("save-doc", async (data) => {
+      await Document.findByIdAndUpdate(documentId, { data });
+    });
+  });
+});
 
 const findOrCreateDoc = async (id) => {
-  if (id == null) return
+  if (id == null) return;
 
-  const doc = await Document.findById(id)
-  if (doc) return doc
-  return await Document.create({ _id: id, data: defaultValue })
-}
+  const doc = await Document.findById(id);
+  if (doc) return doc;
+
+  return await Document.create({ _id: id, data: defaultValue });
+};
+
+
